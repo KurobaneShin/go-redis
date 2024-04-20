@@ -49,11 +49,27 @@ func (s *Server) Start() error {
 	return s.acceptLoop()
 }
 
+func (s *Server) handleRawMsg(rawMsg []byte) error {
+	fmt.Println("handleRawMsg", string(rawMsg))
+	cmd, err := parseCommand(string(rawMsg))
+	if err != nil {
+		return err
+	}
+
+	switch v := cmd.(type) {
+	case SetCommand:
+		slog.Info("set command", "key", v.key, "val", v.val)
+	}
+	return nil
+}
+
 func (s *Server) loop() {
 	for {
 		select {
 		case rawMsg := <-s.msgCh:
-			fmt.Println(rawMsg)
+			if err := s.handleRawMsg(rawMsg); err != nil {
+				slog.Error("handleRawMsg error", "err", err)
+			}
 		case <-s.quitCh:
 			return
 		case peer := <-s.addPeerCh:
