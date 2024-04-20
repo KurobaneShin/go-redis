@@ -1,10 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"log/slog"
 	"net"
+	"time"
+
+	"go-redis/client"
 )
 
 const defaultListenerAddress = ":5001"
@@ -50,7 +53,6 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handleRawMsg(rawMsg []byte) error {
-	fmt.Println("handleRawMsg", string(rawMsg))
 	cmd, err := parseCommand(string(rawMsg))
 	if err != nil {
 		return err
@@ -102,7 +104,19 @@ func (s *Server) handleConn(conn net.Conn) {
 }
 
 func main() {
-	server := NewServer(Config{})
+	go func() {
+		server := NewServer(Config{})
 
-	log.Fatal(server.Start())
+		log.Fatal(server.Start())
+	}()
+
+	time.Sleep(time.Second)
+
+	client := client.New("localhost:5001")
+
+	if err := client.Set(context.Background(), "foo", "bar"); err != nil {
+		log.Fatal(err)
+	}
+
+	select {} // gambi to server not hangout
 }
