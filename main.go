@@ -18,7 +18,7 @@ type Config struct {
 }
 
 type Message struct {
-	data []byte
+	cmd  Command
 	peer *Peer
 }
 
@@ -62,12 +62,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handleMessage(msg Message) error {
-	cmd, err := parseCommand(string(msg.data))
-	if err != nil {
-		return err
-	}
-
-	switch v := cmd.(type) {
+	switch v := msg.cmd.(type) {
 	case SetCommand:
 		return s.kv.Set(v.key, v.val)
 
@@ -138,8 +133,6 @@ func main() {
 		if err := c.Set(context.Background(), fmt.Sprintf("foo_%d", i), fmt.Sprintf("bar_%d", i)); err != nil {
 			log.Fatal(err)
 		}
-
-		time.Sleep(time.Second)
 
 		val, err := c.Get(context.Background(), fmt.Sprintf("foo_%d", i))
 		if err != nil {
