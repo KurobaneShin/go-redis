@@ -13,13 +13,13 @@ type Client struct {
 	conn net.Conn
 }
 
-func New(address string) (*Client, error) {
-	conn, err := net.Dial("tcp", address)
+func New(addr string) (*Client, error) {
+	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
-		addr: address,
+		addr: addr,
 		conn: conn,
 	}, nil
 }
@@ -59,4 +59,8 @@ func (c *Client) Get(ctx context.Context, key string) (string, error) {
 	n, err := c.conn.Read(b)
 
 	return string(b[:n]), err
+}
+
+func (c *Client) Close() error {
+	return c.conn.Close()
 }
